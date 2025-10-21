@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@layer base {
+  :root {
+    --background: 217 25% 9%;
+    --foreground: 210 40% 98%;
+
+    --card: 217 25% 12%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 217 25% 12%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 207 89% 54%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 217 25% 16%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217 25% 16%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 207 89% 54%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --border: 217 25% 20%;
+    --input: 217 25% 16%;
+    --ring: 207 89% 54%;
+
+    --radius: 0.75rem;
+
+    --chart-1: 207 89% 54%;
+    --chart-2: 142 71% 45%;
+    --chart-3: 0 72% 51%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 45 93% 58%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold;
+  }
+}
+
+@layer utilities {
+  .text-success {
+    color: hsl(var(--success));
+  }
+  
+  .text-destructive {
+    color: hsl(var(--destructive));
+  }
+}
