@@ -5,25 +5,25 @@
 
 @layer base {
   :root {
-    --background: 217 25% 9%;
-    --foreground: 210 40% 98%;
+    --background: 0 0% 100%;
+    --foreground: 210 10% 12%;
 
-    --card: 217 25% 12%;
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 100%;
+    --card-foreground: 210 10% 12%;
 
-    --popover: 217 25% 12%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 10% 12%;
 
-    --primary: 207 89% 54%;
+    --primary: 220 90% 56%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 217 25% 16%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 210 16% 96%;
+    --secondary-foreground: 210 10% 35%;
 
-    --muted: 217 25% 16%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 210 13% 85%;
+    --muted-foreground: 210 10% 45%;
 
-    --accent: 207 89% 54%;
+    --accent: 220 90% 56%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 51%;
@@ -32,13 +32,13 @@
     --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
 
-    --border: 217 25% 20%;
-    --input: 217 25% 16%;
-    --ring: 207 89% 54%;
+    --border: 210 12% 90%;
+    --input: 210 14% 98%;
+    --ring: 220 90% 56%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
-    --chart-1: 207 89% 54%;
+    --chart-1: 220 90% 56%;
     --chart-2: 142 71% 45%;
     --chart-3: 0 72% 51%;
     --chart-4: 280 65% 60%;
@@ -48,17 +48,18 @@
 
 @layer base {
   * {
-      @apply border-[hsl(var(--border))];
-    }
-
+    box-sizing: border-box;
+    border-color: hsl(var(--border));
+  }
 
   body {
-    @apply bg-background text-foreground;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-bold;
+    font-weight: 700;
   }
 }
 

@@ -1,6 +1,7 @@
 import * as React from "react";
 
-export type ToastProps = React.HTMLAttributes<HTMLDivElement> & { open?: boolean; onOpenChange?: (open: boolean) => void };
+export type ToastVariant = "default" | "destructive" | string;
+export type ToastProps = React.HTMLAttributes<HTMLDivElement> & { open?: boolean; onOpenChange?: (open: boolean) => void; variant?: ToastVariant };
 
 export const ToastProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }) => <div>{children}</div>;
 
@@ -29,5 +30,4 @@ export const ToastDescription: React.FC<React.PropsWithChildren<{}>> = ({ childr
 
 export default Toast;
 
-// Types expected by hooks/use-toast
 export type ToastActionElement = React.ReactElement<typeof ToastAction>;

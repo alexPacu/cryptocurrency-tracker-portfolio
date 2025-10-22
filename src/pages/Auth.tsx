@@ -33,7 +33,6 @@ export default function Auth() {
 
     setLoading(true);
     
-    // Simulate API call
     setTimeout(() => {
       toast({
         title: isLogin ? "Welcome back!" : "Account created!",

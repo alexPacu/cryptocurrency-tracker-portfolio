@@ -15,16 +15,30 @@ import { cn } from "@/lib/utils";
 interface CryptoTableProps {
   coins: Coin[];
   loading?: boolean;
+  currentPage: number;
+  onPageChange: (page: number) => void;
+  itemsPerPage: number;
+  onItemsPerPageChange: (items: number) => void;
+  totalPages: number;
 }
 
-export const CryptoTable = ({ coins, loading }: CryptoTableProps) => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 
-  const totalPages = Math.ceil(coins.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentCoins = coins.slice(startIndex, endIndex);
+export const CryptoTable = ({ 
+  coins, 
+  loading, 
+  currentPage, 
+  onPageChange, 
+  itemsPerPage, 
+  onItemsPerPageChange,
+  totalPages 
+}: CryptoTableProps) => {
 
   const formatNumber = (num: number) => {
     if (num >= 1e12) return `$${(num / 1e12).toFixed(2)}T`;
@@ -39,31 +53,31 @@ export const CryptoTable = ({ coins, loading }: CryptoTableProps) => {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-lg border border-border overflow-hidden">
+      <div className="rounded-md border border-border overflow-hidden bg-card">
         <Table>
           <TableHeader>
-            <TableRow className="hover:bg-transparent">
-              <TableHead className="w-12">#</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead className="text-right">Price</TableHead>
-              <TableHead className="text-right">24h %</TableHead>
-              <TableHead className="text-right">Market Cap</TableHead>
-              <TableHead className="text-right">24h Volume</TableHead>
-              <TableHead className="text-right">24h Trend</TableHead>
+            <TableRow className="hover:bg-transparent border-b border-border">
+              <TableHead className="w-12 text-muted-foreground">#</TableHead>
+              <TableHead className="text-muted-foreground">Name</TableHead>
+              <TableHead className="text-right text-muted-foreground">Price</TableHead>
+              <TableHead className="text-right text-muted-foreground">24h %</TableHead>
+              <TableHead className="text-right text-muted-foreground">Market Cap</TableHead>
+              <TableHead className="text-right text-muted-foreground">24h Volume</TableHead>
+              <TableHead className="text-right text-muted-foreground">24h Trend</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {currentCoins.map((coin) => {
+            {coins.map((coin) => {
               const isPositive = coin.price_change_percentage_24h > 0;
               return (
-                <TableRow key={coin.id}>
-                  <TableCell className="font-medium">{coin.market_cap_rank}</TableCell>
+                <TableRow key={coin.id} className="border-b border-border">
+                  <TableCell className="font-medium text-muted-foreground">{coin.market_cap_rank}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <img src={coin.image} alt={coin.name} className="h-8 w-8" />
+                      <img src={coin.image} alt={coin.name} className="h-6 w-6" />
                       <div>
                         <div className="font-medium">{coin.name}</div>
-                        <div className="text-sm text-muted-foreground uppercase">
+                        <div className="text-xs text-muted-foreground uppercase">
                           {coin.symbol}
                         </div>
                       </div>
@@ -110,65 +124,87 @@ export const CryptoTable = ({ coins, loading }: CryptoTableProps) => {
         </Table>
       </div>
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
+      <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Show</span>
+          <Select
+            value={itemsPerPage.toString()}
+            onValueChange={(value) => onItemsPerPageChange(parseInt(value))}
           >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          
-          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-            let pageNum;
-            if (totalPages <= 5) {
-              pageNum = i + 1;
-            } else if (currentPage <= 3) {
-              pageNum = i + 1;
-            } else if (currentPage >= totalPages - 2) {
-              pageNum = totalPages - 4 + i;
-            } else {
-              pageNum = currentPage - 2 + i;
-            }
-            
-            return (
-              <Button
-                key={pageNum}
-                variant={currentPage === pageNum ? "default" : "outline"}
-                size="icon"
-                onClick={() => setCurrentPage(pageNum)}
-              >
-                {pageNum}
-              </Button>
-            );
-          })}
-          
-          {totalPages > 5 && currentPage < totalPages - 2 && (
-            <span className="px-2">...</span>
-          )}
-          
-          {totalPages > 5 && currentPage < totalPages - 2 && (
+            <SelectTrigger className="h-8 w-[70px]">
+              <SelectValue placeholder="10" />
+            </SelectTrigger>
+            <SelectContent side="top">
+              {[10, 25, 50, 100].map((value) => (
+                <SelectItem key={value} value={value.toString()}>
+                  {value}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <span className="text-sm text-muted-foreground">entries</span>
+        </div>
+
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2">
             <Button
               variant="outline"
               size="icon"
-              onClick={() => setCurrentPage(totalPages)}
+              onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
             >
-              {totalPages}
+              <ChevronLeft className="h-4 w-4" />
             </Button>
-          )}
+            
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let pageNum;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (currentPage <= 3) {
+                pageNum = i + 1;
+              } else if (currentPage >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = currentPage - 2 + i;
+              }
+              
+              return (
+                <Button
+                  key={pageNum}
+                  variant={currentPage === pageNum ? "default" : "outline"}
+                  size="icon"
+                  onClick={() => onPageChange(pageNum)}
+                >
+                  {pageNum}
+                </Button>
+              );
+            })}
+            
+            {totalPages > 5 && currentPage < totalPages - 2 && (
+              <span className="px-2">...</span>
+            )}
+            
+            {totalPages > 5 && currentPage < totalPages - 2 && (
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => onPageChange(totalPages)}
+              >
+                {totalPages}
+              </Button>
+            )}
 
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage === totalPages}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
