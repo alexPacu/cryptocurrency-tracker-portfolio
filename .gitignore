@@ -1,3 +1,15 @@
+# Dependencies
+node_modules/
+client/node_modules/
+backend/node_modules/
+
+# Build outputs
+dist/
+dist-ssr/
+build/
+client/build/
+backend/build/
+
 # Logs
 logs
 *.log
@@ -7,52 +19,56 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
-.idea
-.DS_Store
+.idea/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
 
-# Vite / build caches
+# Build caches
 .vite/
 .cache/
-dist/
-
-# Environment files
-.env
-.env.*
-
-# Lockfiles (optional - keep in repo if you use them for deterministic installs)
-# package-lock.json
-# yarn.lock
-# pnpm-lock.yaml
-
-# TypeScript
 *.tsbuildinfo
 
-# Coverage
+# Testing
 coverage/
+.nyc_output/
 
 # Storybook / other generated
 .out/
+.next/
 
-# Platform files
+# OS files
+.DS_Store
 Thumbs.db
+desktop.ini
+ehthumbs.db
+*.swp
+*.swo
+*~
 
-# IDEs
+# Docker
+# .dockerignore is version controlled
+
+# IDE
 .idea/
 .vscode/
+.project
+.classpath
+.settings/
 
 # Misc
 *.tgz
+*.tar.gz
 
