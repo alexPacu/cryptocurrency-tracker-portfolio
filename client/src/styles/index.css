@@ -9,6 +9,18 @@
   --border: rgba(255, 255, 255, 0.12);
 }
 
+/* Light theme overrides when <body class="light-theme"> is set */
+body.light-theme {
+  --primary: #1a73e8;
+  --success: #0a7a3b;
+  --error: #c1272d;
+  --background: #f7f9fc;
+  --surface: #ffffff;
+  --text: #0b1220;
+  --text-secondary: rgba(11, 18, 32, 0.6);
+  --border: rgba(11, 18, 32, 0.08);
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',

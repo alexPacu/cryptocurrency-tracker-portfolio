@@ -1,7 +1,11 @@
 import React from 'react';
+import { NavLink } from 'react-router-dom';
 import '../styles/Navbar.css';
+import { useSettings } from '../contexts/SettingsContext';
 
 const Navbar = () => {
+  const { t } = useSettings();
+
   return (
     <nav className="navbar">
       <div className="navbar-container">
@@ -11,14 +15,17 @@ const Navbar = () => {
         </div>
         
         <div className="nav-items">
-          <button className="nav-button">
-            Dashboard
-          </button>
-          <button className="nav-button">
-            Portfolio
-          </button>
+          <NavLink to="/" end className={({isActive}) => `nav-button ${isActive ? 'active' : ''}`}>
+            {t('dashboard')}
+          </NavLink>
+          <NavLink to="/portfolio" className={({isActive}) => `nav-button ${isActive ? 'active' : ''}`}>
+            {t('portfolio')}
+          </NavLink>
+          <NavLink to="/settings" className={({isActive}) => `nav-button ${isActive ? 'active' : ''}`}>
+            {t('settings')}
+          </NavLink>
           <button className="nav-button login-button">
-            Login
+            {t('login')}
           </button>
         </div>
       </div>

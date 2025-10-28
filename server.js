@@ -20,8 +20,9 @@ const COINGECKO_API = 'https://api.coingecko.com/api/v3';
 app.get('/api/coins', async (req, res) => {
   try {
     const { page = 1, per_page = 10 } = req.query;
+    const vs = req.query.currency || req.query.vs_currency || 'usd';
     const response = await fetch(
-      `${COINGECKO_API}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${per_page}&page=${page}&sparkline=true&price_change_percentage=24h`
+      `${COINGECKO_API}/coins/markets?vs_currency=${encodeURIComponent(vs)}&order=market_cap_desc&per_page=${per_page}&page=${page}&sparkline=true&price_change_percentage=24h`
     );
     
     if (!response.ok) {
