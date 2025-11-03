@@ -6,6 +6,8 @@ import Dashboard from './pages/Dashboard';
 import Portfolio from './pages/Portfolio';
 import CoinDetails from './pages/CoinDetails';
 import Settings from './pages/Settings';
+import Login from './pages/Login';
+import Register from './pages/Register';
 import NotFound from './pages/NotFound';
 import './styles/index.css';
 
@@ -29,6 +31,8 @@ const App = () => (
         <Route path="/portfolio" element={<Portfolio />} />
         <Route path="/coin/:id" element={<CoinDetails />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>

@@ -24,9 +24,9 @@ const Navbar = () => {
           <NavLink to="/settings" className={({isActive}) => `nav-button ${isActive ? 'active' : ''}`}>
             {t('settings')}
           </NavLink>
-          <button className="nav-button login-button">
+          <NavLink to="/login" className="nav-button login-button">
             {t('login')}
-          </button>
+          </NavLink>
         </div>
       </div>
     </nav>
