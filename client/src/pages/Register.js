@@ -35,8 +35,26 @@ export default function Register() {
 
     setBusy(true);
     try {
-      // Placeholder: replace with actual registration API call
-      await new Promise((r) => setTimeout(r, 800));
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          username,
+          password,
+          confirm
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast.error(data.error || 'Registration failed');
+        return;
+      }
+
       toast.success('Registered successfully. Please log in.');
       navigate('/login');
     } catch (err) {

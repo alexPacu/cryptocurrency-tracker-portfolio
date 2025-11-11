@@ -18,12 +18,25 @@ export default function Login() {
     }
     setBusy(true);
     try {
-      // Placeholder: replace with real auth API call
-      // const res = await fetch('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) })
-      // handle real response here
-      await new Promise(r => setTimeout(r, 700));
-      localStorage.setItem('auth.user', JSON.stringify({ email }));
-      toast.success('Logged in');
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast.error(data.error || 'Login failed');
+        return;
+      }
+
+      localStorage.setItem('auth.user', JSON.stringify(data.user));
+      localStorage.setItem('auth.token', data.token || 'authenticated');
+      
+      toast.success('Logged in successfully');
       navigate('/portfolio');
     } catch (err) {
       toast.error(err.message || 'Login failed');

@@ -14,20 +14,14 @@ export default function CoinDetails() {
     const load = async () => {
       setLoading(true);
       try {
-        // próbáljuk a helyi proxy /api/coins/:id-t, ha nincs, fallback a CoinGecko-ra
         const res = await fetch(`/api/coins/${id}`);
         if (!res.ok) {
-          // fallback
-          const fallback = await fetch(`https://api.coingecko.com/api/v3/coins/${id}`);
-          if (!fallback.ok) throw new Error('Failed to load coin data');
-          const data = await fallback.json();
-          if (mounted) setCoin(data);
-        } else {
-          const data = await res.json();
-          if (mounted) setCoin(data);
+          throw new Error('Failed to load coin data');
         }
+        const data = await res.json();
+        if (mounted) setCoin(data);
       } catch (err) {
-        toast.error(err.message || 'Hiba történt a coin betöltése közben');
+        toast.error(err.message || 'Failed to load coin data');
       } finally {
         if (mounted) setLoading(false);
       }
