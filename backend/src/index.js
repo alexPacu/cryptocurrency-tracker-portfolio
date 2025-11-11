@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const fetch = require('node-fetch');
 const cors = require('cors');
@@ -8,7 +9,8 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-const COINGECKO_API = process.env.COINGECKO_API_URL || 'https://api.coingecko.com/api/v3';
+const COINGECKO_API = 'https://api.coingecko.com/api/v3';
+const COINGECKO_API_KEY = process.env.COINGECKO_API_KEY;
 
 
 app.get('/api/coins', async (req, res) => {
@@ -16,7 +18,13 @@ app.get('/api/coins', async (req, res) => {
     const { page = 1, per_page = 10 } = req.query;
     const url = `${COINGECKO_API}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${per_page}&page=${page}&sparkline=true&price_change_percentage=24h`;
 
-    const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
+    // Build headers with API key if provided
+    const headers = { 'Accept': 'application/json' };
+    if (COINGECKO_API_KEY) {
+      headers['x-cg-pro-api-key'] = COINGECKO_API_KEY;
+    }
+
+    const response = await fetch(url, { headers });
     if (!response.ok) {
       const text = await response.text();
       return res.status(response.status).send(text);

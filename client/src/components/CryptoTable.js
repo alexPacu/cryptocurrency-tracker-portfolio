@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import '../styles/CryptoTable.css';
+import { addCoinToPortfolio, removeCoinFromPortfolio, getPortfolioCoins, isCoinInPortfolio } from '../utils/portfolio';
 
 const CryptoTable = ({ 
   coins, 
@@ -8,13 +10,24 @@ const CryptoTable = ({
   onPageChange, 
   itemsPerPage, 
   onItemsPerPageChange,
-  totalPages 
+  totalPages,
+  hidePagination = false // new optional prop to hide pagination for portfolio view
 }) => {
+  const [, setTick] = useState(0);
+
+  useEffect(() => {
+    // re-render when portfolio changes
+    const handler = () => setTick(t => t + 1);
+    window.addEventListener('portfolio:change', handler);
+    return () => window.removeEventListener('portfolio:change', handler);
+  }, []);
+
   const formatNumber = (num) => {
     if (num >= 1e12) return `$${(num / 1e12).toFixed(2)}T`;
     if (num >= 1e9) return `$${(num / 1e9).toFixed(2)}B`;
     if (num >= 1e6) return `$${(num / 1e6).toFixed(2)}M`;
-    return `$${num.toFixed(2)}`;
+    if (typeof num === 'number') return `$${num.toFixed(2)}`;
+    return num ?? 'N/A';
   };
 
   if (loading) {
@@ -34,19 +47,27 @@ const CryptoTable = ({
               <th className="text-right">Market Cap</th>
               <th className="text-right">24h Volume</th>
               <th className="text-right">24h Trend</th>
+              <th>Actions</th> {/* new column */}
             </tr>
           </thead>
           <tbody>
             {coins.map((coin) => {
               const isPositive = coin.price_change_percentage_24h > 0;
+              const inPortfolio = isCoinInPortfolio(coin.id);
               return (
                 <tr key={coin.id} className="crypto-row">
                   <td>{coin.market_cap_rank}</td>
                   <td>
                     <div className="coin-info">
-                      <img src={coin.image} alt={coin.name} />
+                      <Link to={`/coin/${coin.id}`}>
+                        <img src={coin.image} alt={coin.name} />
+                      </Link>
                       <div>
-                        <div className="coin-name">{coin.name}</div>
+                        <div className="coin-name">
+                          <Link to={`/coin/${coin.id}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                            {coin.name}
+                          </Link>
+                        </div>
                         <div className="coin-symbol">{coin.symbol.toUpperCase()}</div>
                       </div>
                     </div>
@@ -78,7 +99,7 @@ const CryptoTable = ({
                                 const x = (i / (coin.sparkline_in_7d.price.length - 1)) * 100;
                                 const min = Math.min(...coin.sparkline_in_7d.price);
                                 const max = Math.max(...coin.sparkline_in_7d.price);
-                                const y = 30 - ((price - min) / (max - min)) * 30;
+                                const y = 30 - ((price - min) / (max - min || 1)) * 30;
                                 return `${x},${y}`;
                               })
                               .join(' ')}
@@ -90,6 +111,27 @@ const CryptoTable = ({
                       </div>
                     )}
                   </td>
+                  <td>
+                    {inPortfolio ? (
+                      <button
+                        className="btn btn-ghost"
+                        onClick={() => {
+                          removeCoinFromPortfolio(coin.id);
+                        }}
+                      >
+                        Remove
+                      </button>
+                    ) : (
+                      <button
+                        className="btn btn-primary"
+                        onClick={() => {
+                          addCoinToPortfolio(coin);
+                        }}
+                      >
+                        Add
+                      </button>
+                    )}
+                  </td>
                 </tr>
               );
             })}
@@ -97,76 +139,78 @@ const CryptoTable = ({
         </table>
       </div>
 
-      <div className="table-footer">
-        <div className="items-per-page">
-          <span>Show</span>
-          <select
-            value={itemsPerPage}
-            onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-          >
-            {[10, 25, 50, 100].map((value) => (
-              <option key={value} value={value}>
-                {value}
-              </option>
-            ))}
-          </select>
-          <span>entries</span>
-        </div>
+      {!hidePagination && (
+        <div className="table-footer">
+          <div className="items-per-page">
+            <span>Show</span>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
+            >
+              {[10, 25, 50, 100].map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
+            </select>
+            <span>entries</span>
+          </div>
 
-        <div className="pagination">
-          <button
-            onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-            disabled={currentPage === 1}
-            className="page-btn"
-          >
-            ←
-          </button>
-          
-          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-            let pageNum;
-            if (totalPages <= 5) {
-              pageNum = i + 1;
-            } else if (currentPage <= 3) {
-              pageNum = i + 1;
-            } else if (currentPage >= totalPages - 2) {
-              pageNum = totalPages - 4 + i;
-            } else {
-              pageNum = currentPage - 2 + i;
-            }
-            
-            return (
-              <button
-                key={pageNum}
-                onClick={() => onPageChange(pageNum)}
-                className={`page-btn ${currentPage === pageNum ? 'active' : ''}`}
-              >
-                {pageNum}
-              </button>
-            );
-          })}
-          
-          {totalPages > 5 && currentPage < totalPages - 2 && (
-            <span className="ellipsis">...</span>
-          )}
-          
-          {totalPages > 5 && currentPage < totalPages - 2 && (
+          <div className="pagination">
             <button
-              onClick={() => onPageChange(totalPages)}
+              onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
               className="page-btn"
             >
-              {totalPages}
+              ←
             </button>
-          )}
+            
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let pageNum;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (currentPage <= 3) {
+                pageNum = i + 1;
+              } else if (currentPage >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = currentPage - 2 + i;
+              }
+              
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => onPageChange(pageNum)}
+                  className={`page-btn ${currentPage === pageNum ? 'active' : ''}`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+            
+            {totalPages > 5 && currentPage < totalPages - 2 && (
+              <span className="ellipsis">...</span>
+            )}
+            
+            {totalPages > 5 && currentPage < totalPages - 2 && (
+              <button
+                onClick={() => onPageChange(totalPages)}
+                className="page-btn"
+              >
+                {totalPages}
+              </button>
+            )}
 
-          <button
-            onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
-            disabled={currentPage === totalPages}
-            className="page-btn"
-          >
-            →
-          </button>
+            <button
+              onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage === totalPages}
+              className="page-btn"
+            >
+              →
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
