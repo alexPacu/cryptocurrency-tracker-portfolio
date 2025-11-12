@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import '../styles/pages.css';
-import { toast } from 'react-toastify';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -11,25 +10,27 @@ export default function Register() {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
 
   const validateEmail = (e) => /\S+@\S+\.\S+/.test(e);
 
   const onSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     if (!email || !username || !password || !confirm) {
-      toast.error('Please fill all fields');
+      setError('Please fill all fields');
       return;
     }
     if (!validateEmail(email)) {
-      toast.error('Please enter a valid email address');
+      setError('Please enter a valid email address');
       return;
     }
     if (password.length < 6) {
-      toast.error('Password must be at least 6 characters');
+      setError('Password must be at least 6 characters');
       return;
     }
     if (password !== confirm) {
-      toast.error('Passwords do not match');
+      setError('Passwords do not match');
       return;
     }
 
@@ -51,14 +52,16 @@ export default function Register() {
       const data = await response.json();
 
       if (!response.ok) {
-        toast.error(data.error || 'Registration failed');
+        setError(data.error || 'Registration failed');
         return;
       }
 
-      toast.success('Registered successfully. Please log in.');
-      navigate('/login');
+      // Auto-login after registration
+      localStorage.setItem('auth.user', JSON.stringify(data.user));
+      localStorage.setItem('auth.token', data.token);
+      navigate('/portfolio');
     } catch (err) {
-      toast.error(err.message || 'Registration failed');
+      setError(err.message || 'Registration failed');
     } finally {
       setBusy(false);
     }
@@ -70,6 +73,7 @@ export default function Register() {
       <main className="dashboard-main container">
         <div className="card" style={{ maxWidth: 560, margin: '0 auto' }}>
           <h2>Register</h2>
+          {error && <div style={{ color: '#ef4444', marginBottom: '1rem', padding: '0.5rem', background: '#fee2e2', borderRadius: '4px' }}>{error}</div>}
           <form onSubmit={onSubmit} style={{ display: 'grid', gap: 12, marginTop: 12 }}>
             <label>
               Email

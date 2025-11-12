@@ -2,18 +2,19 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import '../styles/pages.css';
-import { toast } from 'react-toastify';
 
 export default function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
 
   const onSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     if (!email || !password) {
-      toast.error('Please enter email and password');
+      setError('Please enter email and password');
       return;
     }
     setBusy(true);
@@ -29,17 +30,16 @@ export default function Login() {
       const data = await response.json();
 
       if (!response.ok) {
-        toast.error(data.error || 'Login failed');
+        setError(data.error || 'Login failed');
         return;
       }
 
       localStorage.setItem('auth.user', JSON.stringify(data.user));
-      localStorage.setItem('auth.token', data.token || 'authenticated');
+      localStorage.setItem('auth.token', data.token);
       
-      toast.success('Logged in successfully');
       navigate('/portfolio');
     } catch (err) {
-      toast.error(err.message || 'Login failed');
+      setError(err.message || 'Login failed');
     } finally {
       setBusy(false);
     }
@@ -51,6 +51,7 @@ export default function Login() {
       <main className="dashboard-main container">
         <div className="card" style={{ maxWidth: 520, margin: '0 auto' }}>
           <h2>Login</h2>
+          {error && <div style={{ color: '#ef4444', marginBottom: '1rem', padding: '0.5rem', background: '#fee2e2', borderRadius: '4px' }}>{error}</div>}
           <form onSubmit={onSubmit} style={{ display: 'grid', gap: 12, marginTop: 12 }}>
             <label>
               Email
