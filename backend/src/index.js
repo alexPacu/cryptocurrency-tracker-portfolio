@@ -5,8 +5,6 @@ const path = require('path');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 
-const User = require('../../db/User');
-
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -16,6 +14,9 @@ app.use(express.static(path.join(__dirname, '../../client/build')));
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/cryptocurrency-tracker';
 mongoose.set('strictQuery', false);
+mongoose.set('bufferCommands', false);
+
+const User = require('../../db/User')(mongoose);
 mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log(' Connected to MongoDB'))
   .catch(err => console.error(' MongoDB connection error:', err.message));
@@ -38,6 +39,10 @@ function getCache(key) {
   return entry.data;
 }
 
+function dbConnected() {
+  return mongoose.connection && mongoose.connection.readyState === 1; // 1 = connected
+}
+
 async function upstreamFetch(url, options = {}) {
   try {
     const res = await fetch(url, options);
@@ -56,6 +61,9 @@ async function upstreamFetch(url, options = {}) {
 
 app.post('/api/auth/register', async (req, res) => {
   try {
+    if (!dbConnected()) {
+      return res.status(503).json({ error: 'Database unavailable. Please try again later.' });
+    }
     const { email, username, password, confirm } = req.body;
 
     if (!email || !username || !password || !confirm) {
@@ -123,6 +131,9 @@ app.post('/api/auth/register', async (req, res) => {
 
 app.post('/api/auth/login', async (req, res) => {
   try {
+    if (!dbConnected()) {
+      return res.status(503).json({ error: 'Database unavailable. Please try again later.' });
+    }
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -166,6 +177,20 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+app.get('/api/health', (req, res) => {
+  const stateMap = {
+    0: 'disconnected',
+    1: 'connected',
+    2: 'connecting',
+    3: 'disconnecting'
+  };
+  res.json({
+    status: 'ok',
+    port: PORT,
+    db: stateMap[mongoose.connection.readyState] || 'unknown'
+  });
+});
+
 app.get('/api/coins', async (req, res) => {
   try {
     if (!COINMARKETCAP_API_KEY) {
@@ -198,7 +223,9 @@ app.get('/api/coins', async (req, res) => {
       market_cap: coin.quote?.[currency]?.market_cap ?? 0,
       market_cap_rank: coin.cmc_rank,
       total_volume: coin.quote?.[currency]?.volume_24h ?? 0,
+      price_change_percentage_1h: coin.quote?.[currency]?.percent_change_1h ?? 0,
       price_change_percentage_24h: coin.quote?.[currency]?.percent_change_24h ?? 0,
+      price_change_percentage_7d: coin.quote?.[currency]?.percent_change_7d ?? 0,
       sparkline_in_7d: null
     }));
 
@@ -291,6 +318,28 @@ app.get('/api/search', async (req, res) => {
   } catch (error) {
     console.error('GET /api/search error:', error);
     res.status(error.status || 500).json({ error: error.message || 'Search failed' });
+  }
+});
+
+app.get('/api/coins/:id/sparkline', async (req, res) => {
+  try {
+    const id = req.params.id;
+    const currency = (req.query.currency || 'USD').toLowerCase();
+    const days = Math.max(1, Math.min(30, parseInt(req.query.days || '7', 10)));
+
+    const cacheKey = `spark:${id}:${currency}:${days}`;
+    const cached = getCache(cacheKey);
+    if (cached) return res.json({ prices: cached });
+
+    const url = `https://api.coingecko.com/api/v3/coins/${encodeURIComponent(id)}/market_chart?vs_currency=${encodeURIComponent(currency)}&days=${days}`;
+    const data = await upstreamFetch(url);
+    const prices = (data.prices || []).map((p) => p[1]);
+
+    setCache(cacheKey, prices, 60 * 60 * 1000);
+    res.json({ prices });
+  } catch (error) {
+    console.error('GET /api/coins/:id/sparkline error:', error.message || error);
+    res.json({ prices: [] });
   }
 });
 

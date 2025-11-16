@@ -1,29 +1,73 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import '../styles/Dashboard.css';
+import { getWatchlistCoins } from '../utils/watchlist';
+import { getCurrentUser, getHoldings } from '../utils/portfolioStore';
+import { useSettings } from '../contexts/SettingsContext';
 
-export default function PortfolioSummary() {
+export default function SummaryCard({ mode = 'watchlist' }) {
+  const { currency } = useSettings();
+  const user = useMemo(() => getCurrentUser(), []);
+  const [entries, setEntries] = useState(() => (mode === 'portfolio' ? getHoldings(user?._id || user?.username) : []));
+  const [prices, setPrices] = useState({});
+  const [watchlistCoins, setWatchlistCoins] = useState(() => (mode === 'watchlist' ? getWatchlistCoins() : []));
+
+  useEffect(() => {
+    if (mode === 'portfolio') {
+      const onChange = () => setEntries(getHoldings(user?._id || user?.username));
+      window.addEventListener('portfolio:change', onChange);
+      return () => window.removeEventListener('portfolio:change', onChange);
+    } else {
+      const onChange = () => setWatchlistCoins(getWatchlistCoins());
+      window.addEventListener('watchlist:change', onChange);
+      return () => window.removeEventListener('watchlist:change', onChange);
+    }
+  }, [mode, user]);
+
+  useEffect(() => {
+    if (mode !== 'portfolio') return;
+    const uniq = Array.from(new Set(entries.map(e => e.coinId)));
+    uniq.forEach(async (id) => {
+      if (id in prices) return;
+      try {
+        const res = await fetch(`/api/coins/${encodeURIComponent(id)}?currency=${encodeURIComponent(currency)}`);
+        const data = await res.json();
+        const price = data?.market_data?.current_price?.[currency.toLowerCase()] ?? data?.current_price;
+        setPrices(prev => ({ ...prev, [id]: typeof price === 'number' ? price : null }));
+      } catch {
+        setPrices(prev => ({ ...prev, [id]: null }));
+      }
+    });
+  }, [entries, prices, currency, mode]);
+
+  const totalValue = mode === 'portfolio'
+    ? entries.reduce((sum, e) => sum + (Number(e.amount)||0) * (prices[e.coinId] || 0), 0)
+    : watchlistCoins.reduce((sum, c) => sum + (c.current_price || 0), 0);
+
+  const count = mode === 'portfolio' ? entries.length : watchlistCoins.length;
+
+  const fmtCurrency = (n) => {
+    try {
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency.toUpperCase() }).format(n || 0);
+    } catch {
+      return `${currency.toUpperCase()} ${Number(n||0).toFixed(2)}`;
+    }
+  };
+
+  const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+  const name = cap(mode);
+
   return (
     <div className="portfolio-summary card">
-      <h2>Portfolio Summary</h2>
+      <h2>{name} Summary</h2>
       <div className="portfolio-stats">
         <div className="stat-item">
-          <p className="stat-label">Total Portfolio Value</p>
-          <p className="stat-value">$12,345.67</p>
+          <p className="stat-label">Total {name} Value</p>
+          <p className="stat-value">{fmtCurrency(totalValue)}</p>
         </div>
         <div className="stat-item">
-          <p className="stat-label">Total Profit/Loss</p>
-          <p className="stat-value success">
-            $2,100.45 <span>(+17.01%)</span>
-          </p>
+          <p className="stat-label">Coins in {name}</p>
+          <p className="stat-value">{count}</p>
         </div>
-        <div className="stat-item">
-          <p className="stat-label">Overall ROI</p>
-          <p className="stat-value success">20.5%</p>
-        </div>
-
-        <button className="btn btn-primary btn-large" style={{ marginTop: 12 }}>
-          View Detailed Portfolio
-        </button>
       </div>
     </div>
   );

@@ -3,7 +3,8 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Dashboard from './pages/Dashboard';
-import Portfolio from './pages/Portfolio';
+import Watchlist from './pages/Portfolio';
+import PortfolioPage from './pages/PortfolioPage';
 import CoinDetails from './pages/CoinDetails';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
@@ -28,7 +29,8 @@ const App = () => (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Dashboard />} />
-        <Route path="/portfolio" element={<Portfolio />} />
+        <Route path="/watchlist" element={<Watchlist />} />
+        <Route path="/portfolio" element={<PortfolioPage />} />
         <Route path="/coin/:id" element={<CoinDetails />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/login" element={<Login />} />

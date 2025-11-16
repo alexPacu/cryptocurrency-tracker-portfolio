@@ -1,24 +1,25 @@
 :root {
-  --primary: #1a73e8;
-  --success: #34a853;
-  --error: #ea4335;
-  --background: #121212;
-  --surface: #1e1e1e;
-  --text: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.7);
-  --border: rgba(255, 255, 255, 0.12);
+  --primary: #6b7280;
+  --primary-dark: #4b5563;
+  --success: #22c55e;
+  --error: #ef4444;
+  --background: #0d1117;
+  --surface: #111827;
+  --surface-hover: #1f2937;
+  --text: #e5e7eb;
+  --text-secondary: rgba(229, 231, 235, 0.7);
+  --border: rgba(229, 231, 235, 0.08);
 }
 
-/* Light theme overrides when <body class="light-theme"> is set */
 body.light-theme {
-  --primary: #1a73e8;
-  --success: #0a7a3b;
-  --error: #c1272d;
-  --background: #f7f9fc;
+  --success: #16a34a;
+  --error: #dc2626;
+  --background: #f1f5f9;
   --surface: #ffffff;
-  --text: #0b1220;
-  --text-secondary: rgba(11, 18, 32, 0.6);
-  --border: rgba(11, 18, 32, 0.08);
+  --surface-hover: #f8fafc;
+  --text: #111827;
+  --text-secondary: rgba(17, 24, 39, 0.65);
+  --border: rgba(2, 6, 23, 0.08);
 }
 
 body {
@@ -42,7 +43,7 @@ body {
   background-color: var(--surface);
   border-radius: 8px;
   padding: 1rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
 }
 
 .btn {
@@ -60,7 +61,7 @@ body {
 }
 
 .btn-primary:hover {
-  background-color: #1557b0;
+  background-color: var(--primary-dark);
 }
 
 .crypto-table {
@@ -85,7 +86,7 @@ body {
 }
 
 .crypto-row:hover {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--surface-hover);
 }
 
 .coin-info {
@@ -125,9 +126,9 @@ body {
 .pagination button.active {
   background-color: var(--primary);
   border-color: var(--primary);
+  color: #ffffff;
 }
 
-/* Loading spinner */
 .loading {
   display: flex;
   justify-content: center;

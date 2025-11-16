@@ -37,7 +37,7 @@ export default function Login() {
       localStorage.setItem('auth.user', JSON.stringify(data.user));
       localStorage.setItem('auth.token', data.token);
       
-      navigate('/portfolio');
+      navigate('/watchlist');
     } catch (err) {
       setError(err.message || 'Login failed');
     } finally {

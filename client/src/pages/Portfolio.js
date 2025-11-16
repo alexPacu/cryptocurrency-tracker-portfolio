@@ -1,31 +1,37 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from '../components/Navbar';
 import CryptoTable from '../components/CryptoTable';
-import PortfolioSummary from '../components/PortfolioSummary';
 import '../styles/pages.css';
-import '../styles/Dashboard.css'; // keep the .portfolio-summary styles
-import { getPortfolioCoins } from '../utils/portfolio';
+import '../styles/Dashboard.css';
+import { getWatchlistCoins } from '../utils/watchlist';
+import { useSettings } from '../contexts/SettingsContext';
+import { useNavigate } from 'react-router-dom';
 
 export default function Portfolio() {
-  const [coins, setCoins] = useState(() => getPortfolioCoins());
+  const { t } = useSettings();
+  const navigate = useNavigate();
+  const [coins, setCoins] = useState(() => getWatchlistCoins());
 
   useEffect(() => {
-    const handler = () => setCoins(getPortfolioCoins());
-    window.addEventListener('portfolio:change', handler);
-    return () => window.removeEventListener('portfolio:change', handler);
+    const loggedIn = !!localStorage.getItem('auth.token');
+    if (!loggedIn) {
+      navigate('/login');
+      return;
+    }
+    const handler = () => setCoins(getWatchlistCoins());
+    window.addEventListener('watchlist:change', handler);
+    return () => window.removeEventListener('watchlist:change', handler);
   }, []);
 
   return (
     <div>
       <Navbar />
       <main className="dashboard-main container">
-        <h2>Portfolio</h2>
-        <p>Kevesebb helyfoglalás — itt tarthatod a kiválasztott kriptóidat.</p>
-
-        <PortfolioSummary />
+        <h2>Watchlist</h2>
+        <p>Track selected cryptocurrencies here.</p>
 
         <div className="card" style={{ marginTop: 16 }}>
-          {coins.length === 0 && <p>No coins in portfolio yet. Add coins from the Dashboard.</p>}
+          {coins.length === 0 && <p>{t('noWatchlist')}</p>}
           {coins.length > 0 && (
             <CryptoTable
               coins={coins}

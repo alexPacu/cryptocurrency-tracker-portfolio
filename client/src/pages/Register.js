@@ -56,10 +56,9 @@ export default function Register() {
         return;
       }
 
-      // Auto-login after registration
       localStorage.setItem('auth.user', JSON.stringify(data.user));
       localStorage.setItem('auth.token', data.token);
-      navigate('/portfolio');
+      navigate('/watchlist');
     } catch (err) {
       setError(err.message || 'Registration failed');
     } finally {

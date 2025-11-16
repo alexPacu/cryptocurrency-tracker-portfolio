@@ -1,7 +1,7 @@
-const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
-const userSchema = new mongoose.Schema({
+module.exports = (mongoose) => {
+  const userSchema = new mongoose.Schema({
   username: {
     type: String,
     required: true,
@@ -58,52 +58,50 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
-userSchema.index({ email: 1, role: 1 });
-userSchema.index({ username: 1, isActive: 1 });
+  userSchema.index({ email: 1, role: 1 });
+  userSchema.index({ username: 1, isActive: 1 });
 
-userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) {
-    return next();
-  }
-  
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (error) {
-    next(error);
-  }
-});
-
-userSchema.methods.comparePassword = async function(candidatePassword) {
-  try {
-    return await bcrypt.compare(candidatePassword, this.password);
-  } catch (error) {
-    throw error;
-  }
-};
-
-userSchema.methods.toJSON = function() {
-  const userObject = this.toObject();
-  delete userObject.password;
-  return userObject;
-};
-
-userSchema.statics.findByEmail = function(email) {
-  return this.findOne({ email: email.toLowerCase() });
-};
-
-userSchema.statics.findByUsername = function(username) {
-  return this.findOne({ username: username.trim() });
-};
-
-userSchema.statics.isAdmin = function(userId) {
-  return this.findById(userId).then(user => {
-    return user && user.role === 'admin';
+  userSchema.pre('save', async function(next) {
+    if (!this.isModified('password')) {
+      return next();
+    }
+    try {
+      const salt = await bcrypt.genSalt(10);
+      this.password = await bcrypt.hash(this.password, salt);
+      next();
+    } catch (error) {
+      next(error);
+    }
   });
+
+  userSchema.methods.comparePassword = async function(candidatePassword) {
+    try {
+      return await bcrypt.compare(candidatePassword, this.password);
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  userSchema.methods.toJSON = function() {
+    const userObject = this.toObject();
+    delete userObject.password;
+    return userObject;
+  };
+
+  userSchema.statics.findByEmail = function(email) {
+    return this.findOne({ email: email.toLowerCase() });
+  };
+
+  userSchema.statics.findByUsername = function(username) {
+    return this.findOne({ username: username.trim() });
+  };
+
+  userSchema.statics.isAdmin = function(userId) {
+    return this.findById(userId).then(user => {
+      return user && user.role === 'admin';
+    });
+  };
+
+  return mongoose.models.User || mongoose.model('User', userSchema);
 };
-
-const User = mongoose.model('User', userSchema);
-
-module.exports = User;
 
