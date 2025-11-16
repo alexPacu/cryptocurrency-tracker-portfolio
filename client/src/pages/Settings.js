@@ -4,7 +4,7 @@ import '../styles/pages.css';
 import { useSettings } from '../contexts/SettingsContext';
 
 export default function Settings() {
-  const { currency, setCurrency, theme, setTheme, language, setLanguage, t } = useSettings();
+  const { currency, setCurrency, theme, setTheme, t } = useSettings();
 
   return (
     <div>
@@ -18,6 +18,7 @@ export default function Settings() {
               <option value="usd">USD</option>
               <option value="eur">EUR</option>
               <option value="huf">HUF</option>
+              <option value="ron">RON</option>
             </select>
           </label>
 
@@ -26,14 +27,6 @@ export default function Settings() {
             <select value={theme} onChange={e => setTheme(e.target.value)} style={{ marginLeft: 8 }}>
               <option value="dark">{t('dark')}</option>
               <option value="light">{t('light')}</option>
-            </select>
-          </label>
-
-          <label>
-            {t('languageLabel')}:
-            <select value={language} onChange={e => setLanguage(e.target.value)} style={{ marginLeft: 8 }}>
-              <option value="en">English</option>
-              <option value="hu">Magyar</option>
             </select>
           </label>
 

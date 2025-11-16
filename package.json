@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
-    "client": "cd client && npm start",
-    "dev:all": "concurrently \"npm run dev\" \"npm run client\"",
+    "start": "cd backend && npm start",
+    "dev": "concurrently \"cd backend && npm run dev\" \"cd client && npm start\"",
+    "backend": "cd backend && npm run dev",
+    "frontend": "cd client && npm start",
     "seed:all": "node data_dummy/seedAllCoins.js",
     "seed:all:clear": "node data_dummy/seedAllCoins.js USD --clear",
     "create:admin": "node db/createAdminUser.js"
@@ -20,7 +20,6 @@
     "node-fetch": "^2.6.1"
   },
   "devDependencies": {
-    "concurrently": "^8.2.0",
-    "nodemon": "^3.0.1"
+    "concurrently": "^8.2.0"
   }
 }

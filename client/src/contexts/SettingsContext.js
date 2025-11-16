@@ -6,36 +6,23 @@ const SettingsContext = createContext(null);
 const TRANSLATIONS = {
   en: {
     dashboard: 'Dashboard',
+    watchlist: 'Watchlist',
     portfolio: 'Portfolio',
     settings: 'Settings',
     login: 'Login',
-    viewPortfolio: 'View Detailed Portfolio',
-    noPortfolio: 'No coins in portfolio yet. Add coins from the Dashboard.',
+    viewWatchlist: 'View Watchlist',
+    noWatchlist: 'No coins in your watchlist yet. Add from the Dashboard.',
     currencyLabel: 'Preferred fiat currency',
     themeLabel: 'Theme',
-    languageLabel: 'Language',
     dark: 'Dark',
     light: 'Light'
   },
-  hu: {
-    dashboard: 'Főoldal',
-    portfolio: 'Portfólió',
-    settings: 'Beállítások',
-    login: 'Bejelentkezés',
-    viewPortfolio: 'Részletes portfólió megtekintése',
-    noPortfolio: 'Nincs kriptó a portfólióban. Adj hozzá a főoldalról.',
-    currencyLabel: 'Preferált fiat pénznem',
-    themeLabel: 'Téma',
-    languageLabel: 'Nyelv',
-    dark: 'Sötét',
-    light: 'Világos'
-  }
+  
 };
 
 export function SettingsProvider({ children }) {
   const [currency, setCurrency] = useState(() => localStorage.getItem(KEY_PREFIX + 'currency') || 'usd');
   const [theme, setTheme] = useState(() => localStorage.getItem(KEY_PREFIX + 'theme') || 'dark');
-  const [language, setLanguage] = useState(() => localStorage.getItem(KEY_PREFIX + 'language') || 'en');
 
   useEffect(() => {
     localStorage.setItem(KEY_PREFIX + 'currency', currency);
@@ -49,12 +36,8 @@ export function SettingsProvider({ children }) {
     }
   }, [theme]);
 
-  useEffect(() => {
-    localStorage.setItem(KEY_PREFIX + 'language', language);
-  }, [language]);
-
   const t = (key) => {
-    return (TRANSLATIONS[language] && TRANSLATIONS[language][key]) || TRANSLATIONS.en[key] || key;
+    return TRANSLATIONS.en[key] || key;
   };
 
   return (
@@ -63,8 +46,6 @@ export function SettingsProvider({ children }) {
       setCurrency,
       theme,
       setTheme,
-      language,
-      setLanguage,
       t
     }}>
       {children}
