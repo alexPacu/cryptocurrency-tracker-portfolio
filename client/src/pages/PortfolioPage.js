@@ -26,6 +26,12 @@ export default function PortfolioPage() {
   const isLoggedIn = !!localStorage.getItem('auth.token');
 
   useEffect(() => {
+    setCoinData({});
+    setSparks({});
+    setEntries(getHoldings(userId));
+  }, [currency, userId]);
+
+  useEffect(() => {
     const onChange = () => setEntries(getHoldings(userId));
     window.addEventListener('portfolio:change', onChange);
     return () => window.removeEventListener('portfolio:change', onChange);
@@ -59,7 +65,7 @@ export default function PortfolioPage() {
       setCoinData(prev => ({ 
         ...prev, 
         [coinId]: {
-          current_price: data?.market_data?.current_price?.[currency.toLowerCase()] ?? data?.current_price ?? 0,
+          current_price: coinInfo?.current_price ?? (data?.market_data?.current_price?.[currency.toLowerCase()] ?? data?.current_price ?? 0),
           price_change_percentage_1h: coinInfo?.price_change_percentage_1h ?? 0,
           price_change_percentage_24h: coinInfo?.price_change_percentage_24h ?? 0,
           price_change_percentage_7d: coinInfo?.price_change_percentage_7d ?? 0,
@@ -132,9 +138,14 @@ export default function PortfolioPage() {
     if (!(spent > 0)) return;
 
     try {
-      const res = await fetch(`/api/coins/${encodeURIComponent(selected.id)}?currency=${encodeURIComponent(currency)}`);
-      const data = await res.json();
-      const currentPrice = data?.market_data?.current_price?.[currency.toLowerCase()] ?? data?.current_price;
+      const listRes = await fetch(`/api/coins?page=1&per_page=250&currency=${encodeURIComponent(currency)}`);
+      const listData = await listRes.json();
+      let currentPrice = (Array.isArray(listData) ? listData.find(c => c.id === selected.id)?.current_price : null);
+      if (!(currentPrice > 0)) {
+        const res = await fetch(`/api/coins/${encodeURIComponent(selected.id)}?currency=${encodeURIComponent(currency)}`);
+        const data = await res.json();
+        currentPrice = data?.market_data?.current_price?.[currency.toLowerCase()] ?? data?.current_price;
+      }
       
       if (!currentPrice || currentPrice <= 0) {
         alert('Unable to fetch current price for this coin. Please try again.');
