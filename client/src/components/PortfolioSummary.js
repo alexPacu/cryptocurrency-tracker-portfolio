@@ -12,12 +12,20 @@ export default function SummaryCard({ mode = 'watchlist' }) {
   const [watchlistCoins, setWatchlistCoins] = useState(() => (mode === 'watchlist' ? getWatchlistCoins() : []));
 
   useEffect(() => {
+    setPrices({});
+  }, [currency]);
+
+  useEffect(() => {
     if (mode === 'portfolio') {
-      const onChange = () => setEntries(getHoldings(user?._id || user?.username));
+      const load = () => setEntries(getHoldings(user?._id || user?.username));
+      load();
+      const onChange = () => load();
       window.addEventListener('portfolio:change', onChange);
       return () => window.removeEventListener('portfolio:change', onChange);
     } else {
-      const onChange = () => setWatchlistCoins(getWatchlistCoins());
+      const load = () => setWatchlistCoins(getWatchlistCoins());
+      load();
+      const onChange = () => load();
       window.addEventListener('watchlist:change', onChange);
       return () => window.removeEventListener('watchlist:change', onChange);
     }
@@ -25,19 +33,23 @@ export default function SummaryCard({ mode = 'watchlist' }) {
 
   useEffect(() => {
     if (mode !== 'portfolio') return;
-    const uniq = Array.from(new Set(entries.map(e => e.coinId)));
-    uniq.forEach(async (id) => {
-      if (id in prices) return;
+    if (!entries.length) return;
+
+    (async () => {
       try {
-        const res = await fetch(`/api/coins/${encodeURIComponent(id)}?currency=${encodeURIComponent(currency)}`);
-        const data = await res.json();
-        const price = data?.market_data?.current_price?.[currency.toLowerCase()] ?? data?.current_price;
-        setPrices(prev => ({ ...prev, [id]: typeof price === 'number' ? price : null }));
+        const res = await fetch(`/api/coins?page=1&per_page=250&currency=${encodeURIComponent(currency)}`);
+        const list = await res.json();
+        const ids = new Set(entries.map(e => e.coinId));
+        const next = {};
+        (Array.isArray(list) ? list : []).forEach(c => {
+          if (ids.has(c.id)) next[c.id] = c.current_price || null;
+        });
+        setPrices(next);
       } catch {
-        setPrices(prev => ({ ...prev, [id]: null }));
+        
       }
-    });
-  }, [entries, prices, currency, mode]);
+    })();
+  }, [entries, currency, mode]);
 
   const totalValue = mode === 'portfolio'
     ? entries.reduce((sum, e) => sum + (Number(e.amount)||0) * (prices[e.coinId] || 0), 0)

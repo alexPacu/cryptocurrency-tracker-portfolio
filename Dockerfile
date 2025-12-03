@@ -13,27 +13,30 @@ COPY . .
 
 # Build the React app
 WORKDIR /app/client
-RUN npm ci --silent && npm run build
+RUN CI=false npm install && npm run build
 
 FROM node:18-alpine
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
-
+# Copy root and backend package files to install production dependencies
+COPY package.json package-lock.json* ./
+COPY backend/package.json backend/package-lock.json* ./backend/
 RUN npm ci --silent --only=production
+RUN cd backend && npm ci --silent --only=production
 
-# Copy server files
-COPY server.js ./
-COPY client/build ./client/build
+# Copy the built client, backend source, and db models
+COPY --from=builder /app/client/build ./client/build
+COPY backend/src ./backend/src
+COPY db ./db
 
 # Expose port
 EXPOSE 5000
 
-# Health check
+# Health check pointing to a valid API endpoint
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:5000/api/coins?page=1&per_page=1', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+  CMD node -e "require('http').get('http://localhost:5000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
-# Start the server
-CMD ["node", "server.js"]
+# Start the correct server entrypoint
+CMD ["node", "backend/src/index.js"]
 

@@ -40,7 +40,7 @@ function getCache(key) {
 }
 
 function dbConnected() {
-  return mongoose.connection && mongoose.connection.readyState === 1; // 1 = connected
+  return mongoose.connection && mongoose.connection.readyState === 1;
 }
 
 async function upstreamFetch(url, options = {}) {
@@ -57,7 +57,6 @@ async function upstreamFetch(url, options = {}) {
     throw error;
   }
 }
-
 
 app.post('/api/auth/register', async (req, res) => {
   try {
@@ -244,7 +243,9 @@ app.get('/api/coins/:id', async (req, res) => {
     }
 
     const id = req.params.id;
-    const cacheKey = `coin:${id}`;
+    const currency = (req.query.currency || 'USD').toUpperCase();
+
+    const cacheKey = `coin:${id}:${currency}`;
     const cached = getCache(cacheKey);
     if (cached) return res.json(cached);
 
@@ -261,7 +262,7 @@ app.get('/api/coins/:id', async (req, res) => {
       return res.status(404).json({ error: 'Coin not found' });
     }
 
-    const quotesUrl = `${COINMARKETCAP_API}/cryptocurrency/quotes/latest?slug=${encodeURIComponent(id)}&convert=USD`;
+    const quotesUrl = `${COINMARKETCAP_API}/cryptocurrency/quotes/latest?slug=${encodeURIComponent(id)}&convert=${currency}`;
     const quotes = await upstreamFetch(quotesUrl, { headers }).catch(() => null);
     const quoteData = quotes && Object.values(quotes.data || {})[0];
 
@@ -275,9 +276,9 @@ app.get('/api/coins/:id', async (req, res) => {
       },
       description: { en: coinData.description || '' },
       market_data: {
-        current_price: { usd: quoteData?.quote?.USD?.price ?? 0 },
-        market_cap: { usd: quoteData?.quote?.USD?.market_cap ?? 0 },
-        price_change_percentage_24h: quoteData?.quote?.USD?.percent_change_24h ?? 0
+        current_price: { [currency.toLowerCase()]: quoteData?.quote?.[currency]?.price ?? 0 },
+        market_cap: { [currency.toLowerCase()]: quoteData?.quote?.[currency]?.market_cap ?? 0 },
+        price_change_percentage_24h: quoteData?.quote?.[currency]?.percent_change_24h ?? 0
       }
     };
 
@@ -295,26 +296,45 @@ app.get('/api/search', async (req, res) => {
       return res.status(500).json({ error: 'CoinMarketCap API key is not configured' });
     }
 
-    const query = req.query.query || req.query.q || '';
-    if (!query) {
-      return res.json({ coins: [] });
+    const query = (req.query.query || req.query.q || '').trim().toLowerCase();
+    if (!query || query.length < 1) {
+      return res.json([]);
     }
 
-    const url = `${COINMARKETCAP_API}/cryptocurrency/search?query=${encodeURIComponent(query)}`;
-    const headers = {
-      Accept: 'application/json',
-      'X-CMC_PRO_API_KEY': COINMARKETCAP_API_KEY
-    };
+    const allCoinsCacheKey = 'cmc:all-coins';
+    let allCoins = getCache(allCoinsCacheKey);
 
-    const data = await upstreamFetch(url, { headers });
-    const transformed = (data.data?.coins || []).map(coin => ({
-      id: coin.slug,
-      name: coin.name,
-      symbol: coin.symbol,
-      market_cap_rank: coin.rank
-    }));
+    if (!allCoins) {
+      const url = `${COINMARKETCAP_API}/cryptocurrency/map`;
+      const headers = { 'X-CMC_PRO_API_KEY': COINMARKETCAP_API_KEY };
+      const mapData = await upstreamFetch(url, { headers });
+      allCoins = (mapData.data || []).filter(c => c.is_active === 1);
+      setCache(allCoinsCacheKey, allCoins, 24 * 60 * 60 * 1000);
+    }
 
-    res.json({ coins: transformed });
+    const filtered = allCoins
+      .filter(coin => {
+        const name = (coin.name || '').toLowerCase();
+        const symbol = (coin.symbol || '').toLowerCase();
+        return name.includes(query) || symbol.includes(query) || symbol === query;
+      })
+      .sort((a, b) => {
+        const aSymbolMatch = (a.symbol || '').toLowerCase() === query;
+        const bSymbolMatch = (b.symbol || '').toLowerCase() === query;
+        if (aSymbolMatch && !bSymbolMatch) return -1;
+        if (!aSymbolMatch && bSymbolMatch) return 1;
+        return (a.rank || 9999) - (b.rank || 9999);
+      })
+      .slice(0, 20)
+      .map(coin => ({
+        id: coin.slug || coin.id.toString(),
+        name: coin.name,
+        symbol: coin.symbol,
+        market_cap_rank: coin.rank,
+        thumb: `https://s2.coinmarketcap.com/static/img/coins/64x64/${coin.id}.png`
+      }));
+
+    res.json(filtered);
   } catch (error) {
     console.error('GET /api/search error:', error);
     res.status(error.status || 500).json({ error: error.message || 'Search failed' });
@@ -342,7 +362,6 @@ app.get('/api/coins/:id/sparkline', async (req, res) => {
     res.json({ prices: [] });
   }
 });
-
 
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../../client/build/index.html'));
