@@ -1,49 +1,51 @@
 .crypto-table-container {
-  width: 100%;
-  overflow: hidden;
+  overflow-x: auto;
 }
 
 .table-responsive {
-  width: 100%;
   overflow-x: auto;
+  width: 100%;
 }
 
 .crypto-table {
   width: 100%;
+  min-width: 1400px;
   border-collapse: collapse;
-  table-layout: fixed;
+  font-size: 0.875rem;
 }
 
 .crypto-table th,
 .crypto-table td {
-  padding: 0.75rem 0.6rem;
-  text-align: left;
+  padding: 1rem 0.75rem;
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .crypto-table th {
-  color: var(--text-secondary);
+  text-align: left;
   font-weight: 500;
-  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .crypto-table th.sortable {
   cursor: pointer;
   user-select: none;
   position: relative;
+  padding-right: 1.25rem;
+}
+
+.crypto-table th.sortable:hover {
+  color: var(--text);
 }
 
 .crypto-table th.sortable::after {
-  content: '\25B4';
+  content: '';
   position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  opacity: 0.3;
-  font-size: 0.65rem;
+  right: 0.25rem;
+  opacity: 0.4;
 }
 
 .crypto-table th.sortable.sorted-asc::after {
@@ -65,23 +67,26 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  min-width: 0;
+  min-width: 150px;
 }
 
 .coin-info img {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
 }
 
 .coin-name {
   font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 120px;
 }
 
 .coin-symbol {
   color: var(--text-secondary);
   font-size: 0.75rem;
+  text-transform: uppercase;
 }
 
 .change-container {
@@ -103,86 +108,96 @@
   color: var(--error);
 }
 
-.sparkline {
-  width: 160px;
-  height: 30px;
-  margin-left: auto;
+.pct-cell {
+  text-align: right;
+  min-width: 80px;
 }
 
-.pct-cell {
-  text-align: center;
+.sparkline {
+  display: flex;
+  justify-content: flex-end;
+  min-width: 120px;
 }
-.pct-cell .change-container {
-  justify-content: center;
+
+.crypto-row:hover {
+  background-color: var(--surface-hover);
 }
 
 .star-col {
-  width: 32px;
+  width: 40px;
   text-align: center;
 }
 
-/* Fixed column widths */
-.star-col { width: 28px; }
-.col-rank { width: 40px; }
-.col-name { width: 210px; }
-.col-price { width: 95px; }
-.col-1h { width: 60px; }
-.col-24h { width: 60px; }
-.col-7d { width: 60px; }
-.col-mcap { width: 100px; }
-.col-volume { width: 100px; }
-.col-spark { width: 150px; }
-
-.num { font-variant-numeric: tabular-nums; }
-
-/* Responsive tightening for very small screens */
-@media (max-width: 900px) {
-  .crypto-table th, .crypto-table td { padding: 0.75rem 0.5rem; }
-  .col-name { width: 180px; }
-  .col-price { width: 95px; }
-  .col-mcap { width: 100px; }
-  .col-volume { width: 100px; }
-  .col-spark { width: 140px; }
-}
-
-@media (max-width: 720px) {
-  .crypto-table th, .crypto-table td { padding: 0.5rem 0.4rem; }
-  .col-name { width: 160px; }
-  .coin-symbol { display: none; }
-}
-
 .star-btn {
-  width: 28px;
-  height: 28px;
+  background: none;
   border: none;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   cursor: pointer;
-  background: transparent;
-  font-size: 18px;
+  font-size: 1.25rem;
+  padding: 0;
   line-height: 1;
-  color: var(--text-secondary);
-}
-
-.star-btn:hover {
-  background: rgba(255,255,255,0.06);
 }
 
 .star-filled {
-  color: var(--primary);
+  color: gold;
 }
 
 .star-empty {
   color: var(--text-secondary);
 }
 
+.star-btn:hover {
+  transform: scale(1.1);
+}
+
+.col-rank {
+  width: 50px;
+  min-width: 50px;
+}
+
+.col-name {
+  min-width: 180px;
+}
+
+.col-price {
+  min-width: 120px;
+}
+
+.col-pct {
+  min-width: 90px;
+}
+
+.col-mcap {
+  min-width: 100px;
+}
+
+.col-volume {
+  min-width: 100px;
+}
+
+.col-spark {
+  min-width: 130px;
+}
+
+.col-holdings {
+  min-width: 120px;
+}
+
+.col-value {
+  min-width: 120px;
+}
+
+.col-pl {
+  min-width: 130px;
+}
+
+.col-actions {
+  min-width: 80px;
+}
+
 .table-footer {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  padding: 1rem 0;
+  align-items: center;
   margin-top: 1rem;
   flex-wrap: wrap;
   gap: 1rem;
@@ -192,44 +207,37 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  font-size: 0.875rem;
   color: var(--text-secondary);
 }
 
 .items-per-page select {
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text);
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
+  border: 1px solid var(--border);
+  background-color: var(--surface);
+  color: var(--text);
+  cursor: pointer;
 }
 
 .pagination {
   display: flex;
-  gap: 0.25rem;
   align-items: center;
+  gap: 0.5rem;
 }
 
 .page-btn {
   padding: 0.5rem 0.75rem;
-  background-color: var(--surface);
   border: 1px solid var(--border);
+  background-color: var(--surface);
   color: var(--text);
-  cursor: pointer;
   border-radius: 4px;
-  min-width: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  cursor: pointer;
+  font-size: 0.875rem;
 }
 
 .page-btn:hover:not(:disabled) {
   background-color: var(--surface-hover);
-}
-
-.page-btn.active {
-  background-color: var(--primary);
-  border-color: var(--primary);
-  color: white;
 }
 
 .page-btn:disabled {
@@ -237,19 +245,14 @@
   cursor: not-allowed;
 }
 
-.ellipsis {
-  padding: 0.5rem;
-  color: var(--text-secondary);
-}
-
 .page-indicator {
-  color: var(--text-secondary);
   font-size: 0.875rem;
-  margin: 0 0.25rem;
+  color: var(--text-secondary);
+  padding: 0 0.5rem;
 }
 
-.loading {
-  text-align: center;
-  padding: 2rem;
-  color: var(--text-secondary);
+@media (max-width: 1200px) {
+  .crypto-table {
+    min-width: 1200px;
+  }
 }
