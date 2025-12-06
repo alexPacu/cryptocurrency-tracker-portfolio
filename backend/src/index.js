@@ -4,12 +4,28 @@ const cors = require('cors');
 const path = require('path');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
+const session = require('express-session');
+const passport = require('passport');
+const { configureGoogleStrategy } = require('./auth/googleStrategy');
+const authRoutes = require('./routes/authRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || 'replace-me',
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+configureGoogleStrategy();
+app.use(passport.initialize());
+app.use(passport.session());
 app.use(express.static(path.join(__dirname, '../../client/build')));
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/cryptocurrency-tracker';
@@ -357,11 +373,12 @@ app.get('/api/coins/:id/sparkline', async (req, res) => {
 
     setCache(cacheKey, prices, 60 * 60 * 1000);
     res.json({ prices });
-  } catch (error) {
-    console.error('GET /api/coins/:id/sparkline error:', error.message || error);
+  } catch {
     res.json({ prices: [] });
   }
 });
+
+app.use('/api/auth', authRoutes);
 
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../../client/build/index.html'));
