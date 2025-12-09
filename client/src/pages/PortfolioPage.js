@@ -45,14 +45,6 @@ export default function PortfolioPage() {
     }
   }, [currency]);
 
-  const fmtCompact = useCallback((n) => {
-    try {
-      return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency.toUpperCase(), notation: 'compact', compactDisplay: 'short' }).format(n || 0);
-    } catch {
-      return fmtCurrency(n);
-    }
-  }, [currency, fmtCurrency]);
-
   const fetchCoinData = useCallback(async (coinId) => {
     try {
       const res = await fetch(`/api/coins/${encodeURIComponent(coinId)}?currency=${encodeURIComponent(currency)}`);
@@ -68,9 +60,6 @@ export default function PortfolioPage() {
           current_price: coinInfo?.current_price ?? (data?.market_data?.current_price?.[currency.toLowerCase()] ?? data?.current_price ?? 0),
           price_change_percentage_1h: coinInfo?.price_change_percentage_1h ?? 0,
           price_change_percentage_24h: coinInfo?.price_change_percentage_24h ?? 0,
-          price_change_percentage_7d: coinInfo?.price_change_percentage_7d ?? 0,
-          market_cap: coinInfo?.market_cap ?? 0,
-          total_volume: coinInfo?.total_volume ?? 0,
           image: coinInfo?.image || data?.image?.small || data?.image?.large
         }
       }));
@@ -140,6 +129,7 @@ export default function PortfolioPage() {
     try {
       const listRes = await fetch(`/api/coins?page=1&per_page=250&currency=${encodeURIComponent(currency)}`);
       const listData = await listRes.json();
+      
       let currentPrice = (Array.isArray(listData) ? listData.find(c => c.id === selected.id)?.current_price : null);
       if (!(currentPrice > 0)) {
         const res = await fetch(`/api/coins/${encodeURIComponent(selected.id)}?currency=${encodeURIComponent(currency)}`);
@@ -179,7 +169,19 @@ export default function PortfolioPage() {
       <main className="dashboard-main container">
         <div className="card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', marginBottom: 12 }}>
           <h2 style={{ margin: 0 }}>Portfolio</h2>
-          <button className="btn btn-primary" onClick={openModal}>+ Add Crypto</button>
+          <button 
+            className="btn btn-primary" 
+            onClick={openModal}
+            style={{ 
+              padding: '6px 14px', 
+              fontSize: '0.8rem',
+              fontWeight: 500,
+              borderRadius: '5px',
+              minWidth: 'auto'
+            }}
+          >
+            + Add Crypto
+          </button>
         </div>
 
         <SummaryCard mode="portfolio" />
@@ -192,19 +194,16 @@ export default function PortfolioPage() {
               <table className="crypto-table">
                 <thead>
                   <tr>
-                    <th>#</th>
-                    <th>Name</th>
-                    <th className="text-right">Holdings</th>
-                    <th className="text-right">Price</th>
-                    <th className="text-right">1h %</th>
-                    <th className="text-right">24h %</th>
-                    <th className="text-right">7d %</th>
-                    <th className="text-right">Market Cap</th>
-                    <th className="text-right">24h Volume</th>
-                    <th className="text-right">Value</th>
-                    <th className="text-right">P/L</th>
-                    <th className="text-right">Last 7 Days</th>
-                    <th className="text-right">Actions</th>
+                    <th style={{ width: 50, textAlign: 'center' }}>#</th>
+                    <th style={{ minWidth: 180, textAlign: 'left' }}>Name</th>
+                    <th style={{ minWidth: 140, textAlign: 'right' }}>Holdings</th>
+                    <th style={{ minWidth: 120, textAlign: 'right' }}>Price</th>
+                    <th style={{ minWidth: 100, textAlign: 'right' }}>1h %</th>
+                    <th style={{ minWidth: 100, textAlign: 'right' }}>24h %</th>
+                    <th style={{ minWidth: 130, textAlign: 'right' }}>Value</th>
+                    <th style={{ minWidth: 150, textAlign: 'right' }}>P/L</th>
+                    <th style={{ minWidth: 140, textAlign: 'right' }}>Last 7 Days</th>
+                    <th style={{ minWidth: 90, textAlign: 'center' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -219,20 +218,22 @@ export default function PortfolioPage() {
                     
                     const pct1h = data?.price_change_percentage_1h || 0;
                     const pct24h = data?.price_change_percentage_24h || 0;
-                    const pct7d = data?.price_change_percentage_7d || 0;
                     
                     const sparkData = sparks[e.coinId];
+                    const pct7d = sparkData && sparkData.length > 1 
+                      ? ((sparkData[sparkData.length - 1] - sparkData[0]) / sparkData[0]) * 100 
+                      : 0;
                     
                     return (
                       <tr key={e.id} className="crypto-row">
-                        <td>{idx + 1}</td>
+                        <td style={{ textAlign: 'center' }}>{idx + 1}</td>
                         <td>
                           <div className="coin-info">
                             <Link to={`/coin/${e.coinId}`}>
-                              <img src={data?.image || e.image} alt={e.name} width={24} height={24} />
+                              <img src={data?.image || e.image} alt={e.name} width={28} height={28} />
                             </Link>
                             <div>
-                              <div className="coin-name">
+                              <div className="coin-name" style={{ maxWidth: 'none' }}>
                                 <Link to={`/coin/${e.coinId}`} style={{ color: 'inherit', textDecoration: 'none' }}>
                                   {e.name}
                                 </Link>
@@ -241,45 +242,35 @@ export default function PortfolioPage() {
                             </div>
                           </div>
                         </td>
-                        <td className="text-right">{Number(e.amount).toFixed(6)}</td>
-                        <td className="text-right">{cp != null ? fmtCurrency(cp) : '—'}</td>
-                        <td className={`pct-cell ${pct1h >= 0 ? 'percentage-up' : 'percentage-down'}`}>
-                          <div className="change-container">
+                        <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+                          {Number(e.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 8 })}
+                        </td>
+                        <td style={{ textAlign: 'right' }}>{cp != null ? fmtCurrency(cp) : '—'}</td>
+                        <td style={{ textAlign: 'right' }} className={pct1h >= 0 ? 'percentage-up' : 'percentage-down'}>
+                          <div className="change-container" style={{ justifyContent: 'flex-end' }}>
                             <span className="trend-arrow">{pct1h >= 0 ? '↑' : '↓'}</span>
                             {Math.abs(pct1h).toFixed(2)}%
                           </div>
                         </td>
-                        <td className={`pct-cell ${pct24h >= 0 ? 'percentage-up' : 'percentage-down'}`}>
-                          <div className="change-container">
+                        <td style={{ textAlign: 'right' }} className={pct24h >= 0 ? 'percentage-up' : 'percentage-down'}>
+                          <div className="change-container" style={{ justifyContent: 'flex-end' }}>
                             <span className="trend-arrow">{pct24h >= 0 ? '↑' : '↓'}</span>
                             {Math.abs(pct24h).toFixed(2)}%
                           </div>
                         </td>
-                        <td className={`pct-cell ${pct7d >= 0 ? 'percentage-up' : 'percentage-down'}`}>
-                          <div className="change-container">
-                            <span className="trend-arrow">{pct7d >= 0 ? '↑' : '↓'}</span>
-                            {Math.abs(pct7d).toFixed(2)}%
-                          </div>
-                        </td>
-                        <td className="text-right">
-                          {data?.market_cap ? fmtCompact(data.market_cap) : '—'}
-                        </td>
-                        <td className="text-right">
-                          {data?.total_volume ? fmtCompact(data.total_volume) : '—'}
-                        </td>
-                        <td className="text-right" style={{ fontWeight: 600 }}>{fmtCurrency(value)}</td>
-                        <td className={`text-right ${isUp ? 'percentage-up' : 'percentage-down'}`}>
+                        <td style={{ textAlign: 'right', fontWeight: 600 }}>{fmtCurrency(value)}</td>
+                        <td style={{ textAlign: 'right' }} className={isUp ? 'percentage-up' : 'percentage-down'}>
                           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                            <span>{pl != null ? fmtCurrency(pl) : '—'}</span>
+                            <span style={{ fontWeight: 600 }}>{fmtCurrency(pl)}</span>
                             <small style={{ fontSize: '0.75rem', opacity: 0.8 }}>
                               ({plPct >= 0 ? '+' : ''}{plPct.toFixed(2)}%)
                             </small>
                           </div>
                         </td>
-                        <td className="text-right">
+                        <td style={{ textAlign: 'right' }}>
                           {sparkData && sparkData.length > 0 && (
-                            <div className="sparkline">
-                              <svg viewBox="0 0 100 30" width="100" height="30">
+                            <div className="sparkline" style={{ justifyContent: 'flex-end' }}>
+                              <svg viewBox="0 0 100 30" width="120" height="30">
                                 <polyline
                                   points={sparkData
                                     .map((price, i) => {
@@ -292,14 +283,20 @@ export default function PortfolioPage() {
                                     .join(' ')}
                                   fill="none"
                                   stroke={pct7d >= 0 ? 'var(--success)' : 'var(--error)'}
-                                  strokeWidth="1"
+                                  strokeWidth="1.5"
                                 />
                               </svg>
                             </div>
                           )}
                         </td>
-                        <td className="text-right">
-                          <button className="btn btn-ghost" style={{padding: '4px 8px', fontSize: 12}} onClick={() => removeEntry(e.id)}>Remove</button>
+                        <td style={{ textAlign: 'center' }}>
+                          <button 
+                            className="btn btn-ghost" 
+                            style={{ padding: '6px 12px', fontSize: '0.75rem' }} 
+                            onClick={() => removeEntry(e.id)}
+                          >
+                            Remove
+                          </button>
                         </td>
                       </tr>
                     );
@@ -307,8 +304,8 @@ export default function PortfolioPage() {
                 </tbody>
                 <tfoot>
                   <tr>
-                    <td colSpan={9} style={{ textAlign: 'right', fontWeight: 600 }}>Total Portfolio Value</td>
-                    <td className="text-right" style={{ fontWeight: 600 }}>{fmtCurrency(totalValue)}</td>
+                    <td colSpan={6} style={{ textAlign: 'right', fontWeight: 600, paddingRight: 16 }}>Total Portfolio Value</td>
+                    <td style={{ textAlign: 'right', fontWeight: 600 }}>{fmtCurrency(totalValue)}</td>
                     <td colSpan={3}></td>
                   </tr>
                 </tfoot>
@@ -318,12 +315,12 @@ export default function PortfolioPage() {
         </div>
 
         {showModal && (
-          <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }} onClick={() => setShowModal(false)}>
-            <div className="card" style={{ width: 420, padding: 16 }} onClick={e => e.stopPropagation()}>
-              <h3 style={{ marginTop: 0 }}>Add Crypto</h3>
-              <form onSubmit={onSubmit} style={{ display: 'grid', gap: 12 }}>
-                <label style={{ display: 'grid', gap: 6, position: 'relative' }}>
-                  Coin
+          <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }} onClick={() => setShowModal(false)}>
+            <div className="card" style={{ width: 380, maxWidth: '90vw', padding: 20 }} onClick={e => e.stopPropagation()}>
+              <h3 style={{ marginTop: 0, marginBottom: 16, textAlign: 'center' }}>Add Crypto</h3>
+              <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, position: 'relative' }}>
+                  <label style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Coin</label>
                   <input
                     value={search}
                     onChange={e => {
@@ -332,10 +329,32 @@ export default function PortfolioPage() {
                     }}
                     placeholder="Search by name or symbol"
                     autoComplete="off"
-                    style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)' }}
+                    style={{ 
+                      width: '100%', 
+                      padding: '10px 12px', 
+                      borderRadius: 6, 
+                      border: '1px solid var(--border)', 
+                      background: 'var(--background)', 
+                      color: 'var(--text)',
+                      fontSize: '0.9rem',
+                      boxSizing: 'border-box'
+                    }}
                   />
                   {results.length > 0 && (
-                    <div style={{ border: '1px solid var(--border)', borderRadius: 6, maxHeight: 200, overflow: 'auto', background: 'var(--surface)', position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100, marginTop: 4, boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
+                    <div style={{ 
+                      border: '1px solid var(--border)', 
+                      borderRadius: 6, 
+                      maxHeight: 200, 
+                      overflow: 'auto', 
+                      background: 'var(--surface)', 
+                      position: 'absolute', 
+                      top: '100%', 
+                      left: 0, 
+                      right: 0, 
+                      zIndex: 100, 
+                      marginTop: 4, 
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.3)' 
+                    }}>
                       {results.map(r => (
                         <div 
                           key={r.id} 
@@ -372,14 +391,46 @@ export default function PortfolioPage() {
                       ))}
                     </div>
                   )}
-                </label>
-                <label style={{ display: 'grid', gap: 6 }}>
-                  Total Spent ({currency.toUpperCase()})
-                  <input type="number" step="any" min="0" value={totalSpent} onChange={e => setTotalSpent(e.target.value)} required placeholder="e.g., 100" style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)' }} />
-                </label>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
-                  <button type="button" className="btn btn-ghost" onClick={() => setShowModal(false)}>Cancel</button>
-                  <button type="submit" className="btn btn-primary" disabled={!selected || !(Number(totalSpent) > 0)}>Add to Portfolio</button>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Total Spent ({currency.toUpperCase()})</label>
+                  <input 
+                    type="number" 
+                    step="any" 
+                    min="0" 
+                    value={totalSpent} 
+                    onChange={e => setTotalSpent(e.target.value)} 
+                    required 
+                    placeholder="e.g., 100" 
+                    style={{ 
+                      width: '100%', 
+                      padding: '10px 12px', 
+                      borderRadius: 6, 
+                      border: '1px solid var(--border)', 
+                      background: 'var(--background)', 
+                      color: 'var(--text)',
+                      fontSize: '0.9rem',
+                      boxSizing: 'border-box'
+                    }} 
+                  />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 8 }}>
+                  <button 
+                    type="button" 
+                    className="btn btn-ghost" 
+                    onClick={() => setShowModal(false)}
+                    style={{ padding: '8px 16px', fontSize: '0.875rem' }}
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit" 
+                    className="btn btn-primary" 
+                    disabled={!selected || !(Number(totalSpent) > 0)}
+                    style={{ padding: '8px 16px', fontSize: '0.875rem' }}
+                  >
+                    Add to Portfolio
+                  </button>
                 </div>
               </form>
             </div>

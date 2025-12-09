@@ -12,6 +12,7 @@ import Register from './pages/Register';
 import NotFound from './pages/NotFound';
 import './styles/index.css';
 
+
 const App = () => (
   <React.Fragment>
     <ToastContainer
@@ -34,6 +35,7 @@ const App = () => (
         <Route path="/coin/:id" element={<CoinDetails />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/auth/success" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
